@@ -250,7 +250,13 @@ export async function loadLayer(layer: ProjectLayerConfig): Promise<LoadedLayer>
             ring.holes.forEach(addRing);
           };
           if (hierarchy && style.polygonOutline !== false) addRing(hierarchy);
-          const baseFill = classified?.fill ? Color.fromCssColorString(classified.fill) : fill;
+          const colorByProperty = style.colorByProperty;
+          const identifier = colorByProperty ? properties[colorByProperty.property] : undefined;
+          let hash = 0;
+          for (const character of String(identifier ?? entity.id)) hash = (Math.imul(hash, 31) + character.charCodeAt(0)) >>> 0;
+          const paletteColor = colorByProperty?.colors.length ? colorByProperty.colors[hash % colorByProperty.colors.length] : undefined;
+          const baseFill = paletteColor ? Color.fromCssColorString(paletteColor)
+            : classified?.fill ? Color.fromCssColorString(classified.fill) : fill;
           const entityFill = baseFill.withAlpha(baseFill.alpha * Math.min(1, Math.max(0, classified?.fillOpacity ?? style.fillOpacity ?? 1)));
           entity.polygon.material = new ColorMaterialProperty(entityFill);
           entity.polygon.zIndex = new ConstantProperty(classified?.zIndex ?? style.zIndex ?? 0);

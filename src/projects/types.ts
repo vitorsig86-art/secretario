@@ -42,6 +42,7 @@ export type LayerSource =
     format: "geojson";
     url: string;
     autoZoom?: boolean;
+    loadOnDemand?: boolean;
     popup?: VectorPopupConfig;
     ignoreAltitude?: boolean;
     uniqueFeatureIds?: boolean;
@@ -55,6 +56,7 @@ export type LayerSource =
         classes: Record<string, { fill?: string; fillOpacity?: number; stroke?: string; strokeWidth?: number; zIndex?: number }>;
       };
       fill?: string;
+      colorByProperty?: { property: string; colors: string[] };
       fillOpacity?: number;
       clampToGround?: boolean;
       zIndex?: number;
@@ -79,6 +81,7 @@ export interface ProjectLayerConfig {
 }
 
 export interface VectorPopupConfig {
+  calculatedGeometry?: boolean;
   title?: string;
   titleProperty?: string;
   titlePrefix?: string;

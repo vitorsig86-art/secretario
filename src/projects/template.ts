@@ -1,4 +1,5 @@
 import type { GeographicBounds, ModelClippingConfig, ProjectConfig, ProjectLayerConfig } from "./types";
+import { droneVectors } from "./droneVectors";
 
 // EDIT: illustrative W/S/E/N extent in degrees, not a property boundary.
 const bounds: GeographicBounds = [-1, -1, 1, 1];
@@ -198,7 +199,7 @@ export const templateProject: ProjectConfig = {
   },
   // Examples are excluded: the stable loader eagerly loads rasters/vectors,
   // even when defaultVisible is false. A fresh clone never requests placeholders.
-  layers: [basemap, orthomosaic, ...thematicRasters, photogrammetricModel],
+  layers: [basemap, orthomosaic, ...thematicRasters, photogrammetricModel, ...droneVectors],
   // Optional UI has no data or presets in a fresh template.
   scenes: [],
   diagnostic: { steps: [] },

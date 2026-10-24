@@ -1,5 +1,6 @@
-import { ColorMaterialProperty, JulianDate, type Entity } from "cesium";
+import { Cartographic, ColorMaterialProperty, Ellipsoid, EllipsoidGeodesic, JulianDate, type Entity, type PolygonHierarchy } from "cesium";
 import type { VectorPopupConfig } from "../projects/types";
+import { geographicArea } from "./measurementUtils";
 
 const configurations = new WeakMap<Entity, VectorPopupConfig>();
 
@@ -37,9 +38,37 @@ export function readVectorPopup(entity: Entity | undefined, time = JulianDate.no
   if (!config || !entity || !entity.isShowing) return null;
   const properties = entity.properties?.getValue(time) ?? {};
   const titleValue = config.titleProperty ? properties[config.titleProperty] : undefined;
+  const geometryFields: { label: string; value: string }[] = [];
+  if (config.calculatedGeometry) {
+    const hierarchy = (entity.polygon ?? entity.parent?.polygon)?.hierarchy?.getValue(time) as PolygonHierarchy | undefined;
+    if (hierarchy) {
+      let perimeter = 0;
+      const areaOf = (ring: PolygonHierarchy): number => {
+        const points = ring.positions;
+        for (let i = 0; i < points.length; i++) {
+          const start = Cartographic.fromCartesian(points[i], Ellipsoid.WGS84);
+          const end = Cartographic.fromCartesian(points[(i + 1) % points.length], Ellipsoid.WGS84);
+          if (start.longitude !== end.longitude || start.latitude !== end.latitude) {
+            perimeter += new EllipsoidGeodesic(start, end, Ellipsoid.WGS84).surfaceDistance;
+          }
+        }
+        return geographicArea(points) - ring.holes.reduce((sum, hole) => sum + areaOf(hole), 0);
+      };
+      try {
+        const area = areaOf(hierarchy);
+        const number = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
+        geometryFields.push(
+          { label: "Área horizontal calculada (não registral)", value: `${number.format(area)} m²` },
+          { label: "Perímetro calculado", value: `${number.format(perimeter)} m` },
+        );
+      } catch {
+        geometryFields.push({ label: "Geometria calculada", value: "Indisponível para esta geometria" });
+      }
+    }
+  }
   return {
     title: present(titleValue) ? `${config.titlePrefix ?? ""}${titleValue}${config.titleSuffix ?? ""}` : config.title ?? "Informações",
-    fields: config.fields.filter(field => present(properties[field.property])).map(field => {
+    fields: [...geometryFields, ...config.fields.filter(field => present(properties[field.property])).map(field => {
       const value = properties[field.property];
       const decimals = field.numberFormat?.decimalPlaces ?? (field.format === "integer" ? 0 : field.decimals);
       const formatted = typeof value === "number"
@@ -48,6 +77,6 @@ export function readVectorPopup(entity: Entity | undefined, time = JulianDate.no
         }).format(value)
         : String(value);
       return { label: field.label, value: `${field.prefix ?? ""}${formatted}${field.suffix ?? ""}` };
-    }),
+    })],
   };
 }
