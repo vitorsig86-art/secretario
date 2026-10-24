@@ -10,11 +10,6 @@
 .workspace-scene:hover { background: #eaf0e2; }
 .workspace-scene[aria-pressed="true"] { border-color: #6c8b59; background: #dfe9d3; color: #2c4527; }
 .workspace-scene:focus-visible { outline: 2px solid #7fa846; outline-offset: 2px; }
-.workspace-search { flex-shrink: 0; margin-bottom: 20px; }
-.workspace-search-label { display: block; margin-bottom: 6px; color: #53674f; font-size: 12px; line-height: 1.4; font-weight: 650; }
-.workspace-search-input { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #d7dfd3; border-radius: 7px; background: #fff; color: #274a36; font-size: 12px; }
-.workspace-search-input:focus-visible { outline: 2px solid #7fa846; outline-offset: 2px; }
-.workspace-empty { margin: 0 0 20px; color: #7a8578; font-size: 12px; line-height: 1.5; }
 .workspace-section { flex-shrink: 0; margin-bottom: 24px; }
 .workspace-section:last-child { margin-bottom: 0; }
 .workspace-section h3 { margin: 0 0 10px; color: #53674f; font-size: 12px; line-height: 1.4; font-weight: 650; }
@@ -47,8 +42,6 @@
   .workspace-project .location { margin-top: 4px; }
   .workspace-scenes { margin-bottom: 12px; }
   .workspace-scene { min-height: 44px; padding: 6px 13px; touch-action: manipulation; }
-  .workspace-search { margin-bottom: 12px; }
-  .workspace-search-input { min-height: 44px; }
   .workspace-section { margin-bottom: 12px; }
   .workspace-section h3 { margin-bottom: 6px; }
   .workspace-section-toggle { min-height: 44px; touch-action: manipulation; }

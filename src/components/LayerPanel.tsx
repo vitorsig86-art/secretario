@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import type { LayerStatus, ProjectConfig, ProjectLayerConfig, QuickScene } from "../projects/types";
 import { isTemporalLayer } from "../projects/layerVisibility";
 import { TemporalSelector } from "./TemporalSelector";
@@ -24,17 +24,11 @@ export function getWorkspaceSections(layers: ProjectLayerConfig[]) {
   const group = (layer: ProjectLayerConfig) => layer.group ?? (layer.kind === "basemap" ? "basemap" : layer.source.format === "3d-tiles" ? "model" : layer.source.format === "geojson" ? "vector" : "raster");
   return [
     { id: "basemap", title: "Mapa base", layers: layers.filter(layer => group(layer) === "basemap") },
+    { id: "model", title: "Modelo 3D", layers: layers.filter(layer => group(layer) === "model") },
     { id: "raster", title: "Rasters", layers: layers.filter(layer => group(layer) === "raster") },
     { id: "vector", title: "Vetores", layers: layers.filter(layer => group(layer) === "vector") },
-    { id: "model", title: "Modelo 3D", layers: layers.filter(layer => group(layer) === "model") },
     { id: "macro", title: "Análise Macro", layers: layers.filter(layer => group(layer) === "macro") },
   ];
-}
-
-// Searching and collapsing are presentation only: neither one toggles a layer,
-// changes opacity or reaches the Cesium lifecycle.
-function normalize(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
 function sameLayerSet(current: Set<string>, expected: string[]) {
@@ -43,7 +37,6 @@ function sameLayerSet(current: Set<string>, expected: string[]) {
 
 export function LayerPanel({ project, statuses, visible, rasterOpacities, onOpacityChange, onToggle, onClose, scenes, onApplyScene, comparing, onCompare, onExitComparison }: Props) {
   const [modelHint, setModelHint] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   // Sections without an active layer start collapsed. Later layer toggles must
   // not reopen or close a section behind the user's back, so this initializes once.
   const [openSections, setOpenSections] = useState(() => new Set(
@@ -51,7 +44,6 @@ export function LayerPanel({ project, statuses, visible, rasterOpacities, onOpac
       .filter(section => section.layers.some(layer => visible.has(layer.id)))
       .map(section => section.id),
   ));
-  const searchId = useId();
 
   useEffect(() => {
     if (modelHint === null) return;
@@ -59,10 +51,7 @@ export function LayerPanel({ project, statuses, visible, rasterOpacities, onOpac
     return () => window.clearTimeout(timer);
   }, [modelHint]);
 
-  const query = normalize(search);
-  const entries = getWorkspaceSections(project.layers)
-    .map(section => ({ section, layers: query ? section.layers.filter(layer => normalize(`${layer.name} ${layer.description} ${layer.subsection ?? ""}`).includes(query)) : section.layers }))
-    .filter(entry => entry.layers.length > 0);
+  const sections = getWorkspaceSections(project.layers).filter(section => section.layers.length > 0);
 
   function toggleSection(id: string) {
     setOpenSections(current => {
@@ -98,21 +87,10 @@ export function LayerPanel({ project, statuses, visible, rasterOpacities, onOpac
             ))}
           </div>
         </section>}
-      <div className="workspace-search">
-        <label className="workspace-search-label" htmlFor={searchId}>Buscar camada</label>
-        <input
-          id={searchId}
-          type="search"
-          className="workspace-search-input"
-          placeholder="Buscar camada..."
-          value={search}
-          onChange={event => setSearch(event.currentTarget.value)}
-        />
-      </div>
-      {entries.length === 0 && <p className="workspace-empty" role="status">Nenhuma camada encontrada.</p>}
-      {entries.map(({ section, layers }) => {
+      {sections.map(section => {
+        const layers = section.layers;
         const activeCount = section.layers.filter(layer => visible.has(layer.id)).length;
-        const open = Boolean(query) || openSections.has(section.id);
+        const open = openSections.has(section.id);
         return (
           <section key={section.id} className="workspace-section" aria-labelledby={`workspace-${section.id}`}>
             <h3 id={`workspace-${section.id}`}>
