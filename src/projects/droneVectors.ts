@@ -22,7 +22,7 @@ export const droneVectors: ProjectLayerConfig[] = [
     defaultVisible: false,
     source: {
       ...source, url: `${baseUrl}/curvas_4m.geojson`,
-      style: { stroke: "#202020", strokeWidth: 1, clampToGround: true, zIndex: 10 },
+      style: { stroke: "#000000", strokeWidth: 1, clampToGround: true, zIndex: 10 },
       popup: { title: "Curva de nível — 4 m", fields: [
         { property: "ELEVATION", label: "Cota" },
         { property: "CLOSED_CONTOUR", label: "Curva fechada (valor da fonte)" },
